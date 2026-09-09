@@ -31,8 +31,14 @@ insert into public.moderators (profile_id, note) values ('<profile uuid>', 'why'
 Sign-in is email + password, or an emailed link. The link needs the panel's
 URL in the project's auth redirect allow-list once it has a permanent address.
 
-## Running it
+## Where it lives
+
+<https://benditacuriosidad.github.io/time-only-admin/> — GitHub Pages, served
+from the `time-only-admin` repo. That repo is public because Pages needs it to
+be, and the only credential in the page is the anon key, which already ships
+inside the iOS binary.
+
+This folder is the source. To publish a change: `./deploy.sh "what changed"`.
 
 Locally: `python3 -m http.server 8787 --bind 127.0.0.1` from this folder and
-open `http://127.0.0.1:8787/`. Anywhere else: copy `index.html` to any static
-host.
+open `http://127.0.0.1:8787/`.
