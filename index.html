@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Time Only · Moderation</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&display=swap">
+<style>
+  :root{--paper:#FFFFFF;--ink:#111111;--ink2:#5A5A5A;--ink3:#8A8A8A;--field:#EFEFEF;--rule:#E1E1E1;
+        --y:#FFD500;--b:#4A7EBB;--c:#F0605E;--g:#23B893}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:'Archivo',system-ui,sans-serif;
+       -webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums}
+  .bar{display:flex;justify-content:space-between;align-items:center;background:var(--ink);color:var(--paper);
+       padding:13px 26px;font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase}
+  .bar button{background:transparent;border:1.5px solid rgba(255,255,255,.4);color:var(--paper)}
+  .wrap{max-width:1100px;margin:0 auto;padding:26px}
+  h1{font-size:34px;font-weight:700;letter-spacing:-.03em;margin:0 0 6px}
+  h2{font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--ink2);margin:34px 0 10px}
+  p{line-height:1.45}
+  .muted{color:var(--ink2)}
+  button,.pill{font:inherit;cursor:pointer;border:0;border-radius:999px;height:36px;padding:0 16px;font-size:13px;font-weight:700}
+  button.ink{background:var(--ink);color:var(--paper)} button.fld{background:var(--field);color:var(--ink)}
+  button.red{background:var(--c);color:var(--paper)} button:disabled{opacity:.4;cursor:default}
+  input{font:inherit;border:0;background:var(--field);height:44px;padding:0 16px;font-size:14px;width:100%}
+  input:focus,button:focus-visible{outline:2px solid var(--b);outline-offset:2px}
+  .health{background:var(--y);padding:24px 26px;display:grid;grid-template-columns:2fr repeat(4,1fr);gap:18px;align-items:end}
+  .health .big{font-size:64px;font-weight:800;letter-spacing:-.05em;line-height:.9}
+  .health .lbl{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;margin-top:8px}
+  .health .n{font-size:28px;font-weight:700;letter-spacing:-.02em;line-height:1}
+  table{width:100%;border-collapse:collapse;font-size:13.5px}
+  th{text-align:left;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink3);font-weight:700;padding:0 10px 8px 0;border-bottom:1.5px solid var(--ink)}
+  td{padding:12px 10px 12px 0;border-bottom:1px solid var(--rule);vertical-align:top}
+  td.acts{white-space:nowrap;text-align:right} td.acts button{margin-left:6px;height:32px;padding:0 13px;font-size:12.5px}
+  .dots{display:inline-flex;gap:3px;flex-wrap:wrap;max-width:160px;vertical-align:middle}
+  .dots i{width:10px;height:10px;border-radius:50%;display:block;background:var(--g)}
+  .dots i.neg{background:transparent;box-shadow:inset 0 0 0 2px var(--c)} .dots i.held{background:var(--y)}
+  .tag{display:inline-block;font-size:10.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;padding:3px 8px;border-radius:999px;background:var(--field)}
+  .tag.red{background:var(--c);color:var(--paper)} .tag.y{background:var(--y)}
+  .card{background:var(--field);padding:22px;max-width:440px}
+  .row{display:flex;gap:10px;align-items:center}
+  .err{color:#C8322F;font-weight:600;font-size:13px;min-height:18px;margin-top:10px}
+  .empty{color:var(--ink2);padding:18px 0}
+  .tableWrap{overflow-x:auto}
+  .toolbar{display:flex;gap:10px;align-items:center;margin-bottom:12px}
+  .toolbar input{max-width:320px}
+</style>
+</head>
+<body>
+<div class="bar">
+  <span>Time Only · Moderation</span>
+  <span id="who" class="row"></span>
+</div>
+
+<div class="wrap">
+  <section id="signin">
+    <h1>Moderators only.</h1>
+    <p class="muted" style="max-width:56ch">A moderator is a member with extra reading rights, not a superuser. You can see reports, hide a listing and suspend an account. You cannot touch a wallet or the ledger — nobody can, and that is the point.</p>
+    <div class="card">
+      <label style="font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--ink2)">Email</label>
+      <input id="email" type="email" autocomplete="username" style="margin:8px 0 14px">
+      <label style="font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--ink2)">Password</label>
+      <input id="password" type="password" autocomplete="current-password" style="margin:8px 0 18px">
+      <div class="row">
+        <button class="ink" id="btnPassword">Sign in</button>
+        <button class="fld" id="btnLink">Email me a link instead</button>
+      </div>
+      <div class="err" id="signinErr"></div>
+    </div>
+  </section>
+
+  <section id="panel" hidden>
+    <h1 id="headline">The books</h1>
+    <div class="health" id="health">
+      <div><div class="big" id="sysBalance">—</div><div class="lbl">System balance · must be 0</div></div>
+      <div><div class="n" id="members">—</div><div class="lbl">Members</div></div>
+      <div><div class="n" id="openReports">—</div><div class="lbl">Open reports</div></div>
+      <div><div class="n" id="suspended">—</div><div class="lbl">Suspended</div></div>
+      <div><div class="n" id="drifted">—</div><div class="lbl">Drifted wallets</div></div>
+    </div>
+    <p class="muted" style="font-size:13px">System balance is the sum of every ledger entry ever written, in minutes. Anything but zero means time was made from nothing. Drifted wallets are wallets whose cached balance disagrees with their ledger; both should stay at zero for ever.</p>
+
+    <h2>Open reports</h2>
+    <div class="tableWrap"><table id="reports"><thead><tr><th>When</th><th>Reason</th><th>About</th><th>By</th><th>Detail</th><th></th></tr></thead><tbody></tbody></table></div>
+    <div class="empty" id="reportsEmpty" hidden>Nothing open. Good.</div>
+
+    <h2>Members</h2>
+    <div class="toolbar"><input id="q" placeholder="Search by name"><button class="fld" id="btnSearch">Search</button><span class="muted" id="memberCount"></span></div>
+    <div class="tableWrap"><table id="membersT"><thead><tr><th>Name</th><th>Area</th><th>Since</th><th>Balance</th><th>Held</th><th>Listings</th><th>Open</th><th>Reports</th><th></th></tr></thead><tbody></tbody></table></div>
+
+    <h2>Active listings</h2>
+    <div class="tableWrap"><table id="listingsT"><thead><tr><th>Title</th><th>By</th><th>Kind</th><th>Length</th><th>Mode</th><th>Since</th><th></th></tr></thead><tbody></tbody></table></div>
+    <div class="err" id="panelErr"></div>
+  </section>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script>
+// The anon key is public by design: with it you can read what a member can
+// read and call what a member can call. Everything a moderator can do beyond
+// that is checked against the moderators table on the server.
+const URL_ = 'https://fykyfeernhshpmmaimls.supabase.co';
+const ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ5a3lmZWVybmhzaHBtbWFpbWxzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg4NzAxMTIsImV4cCI6MjEwNDQ0NjExMn0.yOHTJ3A9LXMcNEqhlytjqnRPQzPe-ZcZC5nljBQidPE';
+const sb = supabase.createClient(URL_, ANON);
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const min = m => { const a=Math.abs(m); if(a<60) return `${m<0?'−':''}${a} min`; const h=Math.floor(a/60), r=a%60; return `${m<0?'−':''}${h} h${r?' '+String(r).padStart(2,'0'):''}`; };
+const when = iso => new Date(iso).toLocaleDateString('en-GB',{day:'numeric',month:'short'});
+const dots = (m, cls) => { const n=Math.round(Math.abs(m)/30); return `<span class="dots">${`<i class="${cls}"></i>`.repeat(Math.min(n,40))}</span>${n>40?' …':''}`; };
+
+async function refresh() {
+  $('panelErr').textContent = '';
+  const [{data: h, error: he}, {data: reports, error: re}, {data: listings, error: le}] = await Promise.all([
+    sb.rpc('ledger_health').single(),
+    sb.from('reports').select('id, reason, detail, created_at, listing_id, subject_id, reporter:profiles!reports_reporter_id_fkey(display_name), subject:profiles!reports_subject_id_fkey(display_name), listing:listings(title, status, author_id)').is('resolved_at', null).order('created_at', {ascending: false}),
+    sb.from('listings').select('id, title, kind, minutes, mode, created_at, author:profiles!listings_author_id_fkey(display_name)').eq('status','active').order('created_at',{ascending:false}).limit(200),
+  ]);
+  if (he || re || le) { $('panelErr').textContent = (he||re||le).message; if (he) { showSignin('This account is not a moderator.'); } return; }
+  $('sysBalance').textContent = h.system_balance;
+  $('sysBalance').style.color = h.system_balance === 0 ? 'var(--ink)' : '#C8322F';
+  $('members').textContent = h.members; $('openReports').textContent = h.open_reports;
+  $('suspended').textContent = h.suspended; $('drifted').textContent = h.drifted_wallets;
+  $('headline').textContent = h.open_reports ? `${h.open_reports} report${h.open_reports===1?'':'s'} waiting` : 'The books, in order';
+
+  const rb = $('reports').querySelector('tbody'); rb.innerHTML = '';
+  $('reportsEmpty').hidden = reports.length > 0;
+  reports.forEach(r => {
+    const about = r.listing ? `<b>${esc(r.listing.title)}</b><br><span class="muted">listing${r.listing.status!=='active'?' · already hidden':''}</span>`
+                            : `<b>${esc(r.subject?.display_name ?? 'Former member')}</b><br><span class="muted">member</span>`;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${when(r.created_at)}</td><td><span class="tag">${esc(r.reason.replace(/_/g,' '))}</span></td><td>${about}</td>
+      <td>${esc(r.reporter?.display_name ?? '—')}</td><td class="muted" style="max-width:32ch">${esc(r.detail ?? '')}</td>
+      <td class="acts">${r.listing_id ? `<button class="ink" data-a="hide">Hide listing</button>` : ''}${r.subject_id ? `<button class="red" data-a="suspend">Suspend</button>` : ''}<button class="fld" data-a="none">No action</button></td>`;
+    tr.querySelectorAll('button').forEach(b => b.addEventListener('click', () => act(b.dataset.a, r)));
+    rb.appendChild(tr);
+  });
+
+  const lb = $('listingsT').querySelector('tbody'); lb.innerHTML = '';
+  listings.forEach(l => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td><b>${esc(l.title)}</b></td><td>${esc(l.author?.display_name ?? '—')}</td><td>${l.kind}</td><td>${min(l.minutes)}</td><td>${l.mode.replace('_',' ')}</td><td>${when(l.created_at)}</td>
+      <td class="acts"><button class="fld">Hide</button></td>`;
+    tr.querySelector('button').addEventListener('click', async () => {
+      const reason = prompt(`Hide “${l.title}”? Say why (kept in the log):`); if (reason === null) return;
+      await call('hide_listing', {p_listing: l.id, p_reason: reason}); refresh();
+    });
+    lb.appendChild(tr);
+  });
+  await loadMembers();
+}
+
+async function loadMembers() {
+  const q = $('q').value.trim() || null;
+  const {data, error} = await sb.rpc('moderator_members', {p_query: q, p_limit: 200});
+  if (error) { $('panelErr').textContent = error.message; return; }
+  $('memberCount').textContent = `${data.length} shown`;
+  const mb = $('membersT').querySelector('tbody'); mb.innerHTML = '';
+  data.forEach(m => {
+    const tr = document.createElement('tr');
+    const state = m.deleted_at ? '<span class="tag">deleted</span>' : m.suspended_at ? `<span class="tag red">suspended</span>` : '';
+    tr.innerHTML = `<td><b>${esc(m.display_name)}</b> ${state}${m.suspended_reason?`<br><span class="muted">${esc(m.suspended_reason)}</span>`:''}</td>
+      <td>${esc(m.home_label ?? '—')}</td><td>${when(m.created_at)}</td>
+      <td>${dots(m.balance_minutes, m.balance_minutes < 0 ? 'neg' : '')} ${min(m.balance_minutes)}</td>
+      <td>${m.held_minutes ? dots(m.held_minutes,'held')+' '+min(m.held_minutes) : '—'}</td>
+      <td>${m.active_listings}</td><td>${m.open_exchanges}</td><td>${m.reports_against ? `<span class="tag y">${m.reports_against}</span>` : '—'}</td>
+      <td class="acts">${m.deleted_at ? '' : m.suspended_at ? '<button class="fld" data-a="restore">Restore</button>' : '<button class="red" data-a="suspend">Suspend</button>'}</td>`;
+    tr.querySelectorAll('button').forEach(b => b.addEventListener('click', async () => {
+      if (b.dataset.a === 'restore') { await call('restore_member', {p_profile: m.id}); }
+      else { const reason = prompt(`Suspend ${m.display_name}? Say why (they will not see it, the log will):`); if (reason === null || !reason.trim()) return;
+             await call('suspend_member', {p_profile: m.id, p_reason: reason}); }
+      refresh();
+    }));
+    mb.appendChild(tr);
+  });
+}
+
+async function act(kind, r) {
+  if (kind === 'hide') { await call('hide_listing', {p_listing: r.listing_id, p_reason: `report ${r.id}`}); await call('resolve_report', {p_report: r.id, p_outcome: 'listing_hidden'}); }
+  else if (kind === 'suspend') { const reason = prompt('Suspend this member? Say why:'); if (reason === null || !reason.trim()) return;
+    await call('suspend_member', {p_profile: r.subject_id, p_reason: reason}); await call('resolve_report', {p_report: r.id, p_outcome: 'member_suspended'}); }
+  else { await call('resolve_report', {p_report: r.id, p_outcome: 'no_action'}); }
+  refresh();
+}
+
+async function call(fn, args) {
+  const {error} = await sb.rpc(fn, args);
+  if (error) { $('panelErr').textContent = `${fn}: ${error.message}`; throw error; }
+}
+
+function showSignin(msg) { $('panel').hidden = true; $('signin').hidden = false; $('signinErr').textContent = msg || ''; $('who').innerHTML = ''; }
+async function showPanel(session) {
+  $('signin').hidden = true; $('panel').hidden = false;
+  $('who').innerHTML = `<span style="opacity:.7;margin-right:12px">${esc(session.user.email)}</span><button id="out">Sign out</button>`;
+  $('out').addEventListener('click', async () => { await sb.auth.signOut(); showSignin(); });
+  refresh();
+}
+
+$('btnPassword').addEventListener('click', async () => {
+  $('signinErr').textContent = '';
+  const {data, error} = await sb.auth.signInWithPassword({email: $('email').value.trim(), password: $('password').value});
+  if (error) { $('signinErr').textContent = error.message; return; }
+  showPanel(data.session);
+});
+$('btnLink').addEventListener('click', async () => {
+  $('signinErr').textContent = '';
+  const {error} = await sb.auth.signInWithOtp({email: $('email').value.trim(), options: {emailRedirectTo: location.href.split('#')[0]}});
+  $('signinErr').textContent = error ? error.message : 'Sent. Open the link on this device; it brings you back here signed in.';
+});
+$('btnSearch').addEventListener('click', loadMembers);
+$('q').addEventListener('keydown', e => { if (e.key === 'Enter') loadMembers(); });
+
+sb.auth.onAuthStateChange((_e, session) => { if (session) showPanel(session); });
+sb.auth.getSession().then(({data}) => { if (data.session) showPanel(data.session); });
+</script>
+</body>
+</html>
